@@ -1,110 +1,187 @@
-# FHEVM Hardhat Template
+# PrivacyCanvas
 
-A Hardhat-based template for developing Fully Homomorphic Encryption (FHE) enabled Solidity smart contracts using the
-FHEVM protocol by Zama.
+PrivacyCanvas is a privacy-first, on-chain drawing app that lets players create a 10x10 canvas, draw by selecting grid
+cells, and store the encrypted result on-chain using Zama's FHEVM. Only the owner can decrypt their drawing, while the
+chain stores ciphertext and public metadata.
 
-## Quick Start
+## Project Summary
 
-For detailed instructions see:
-[FHEVM Hardhat Quick Start Tutorial](https://docs.zama.ai/protocol/solidity-guides/getting-started/quick-start-tutorial)
+PrivacyCanvas turns a simple pixel canvas into a real privacy use case for fully homomorphic encryption (FHE). A drawing
+is represented as a list of grid cell IDs (1-100). The list is encrypted client-side and saved to the smart contract.
+When the owner loads their canvas, they can request decryption to recover the original drawing.
 
-### Prerequisites
+## Problem It Solves
 
-- **Node.js**: Version 20 or higher
-- **npm or yarn/pnpm**: Package manager
+Traditional on-chain art is public by default. Even if the artwork is meant to be private or revealable later, the
+contract state exposes the data. PrivacyCanvas solves this by keeping drawing data encrypted end-to-end while still
+preserving on-chain integrity and ownership.
 
-### Installation
+## Why It Matters (Advantages)
 
-1. **Install dependencies**
+- Encrypted canvas data stays private while still living on-chain.
+- The contract can store and manage user state without ever seeing plaintext.
+- Ownership and access control are enforced by smart contracts, not by off-chain servers.
+- Demonstrates practical FHE usage beyond simple examples.
+- Clear UX: draw, encrypt, store, decrypt.
 
-   ```bash
-   npm install
-   ```
+## Core Workflow
 
-2. **Set up environment variables**
+1. Create a new 10x10 canvas.
+2. Draw by selecting grid cells (IDs 1-100).
+3. Encrypt the list of selected IDs using the Zama FHE relayer.
+4. Store the ciphertext on-chain.
+5. Fetch the ciphertext later and decrypt client-side to render the drawing.
 
-   ```bash
-   npx hardhat vars set MNEMONIC
+## Features
 
-   # Set your Infura API key for network access
-   npx hardhat vars set INFURA_API_KEY
+- 10x10 grid with deterministic cell IDs (1-100)
+- Create, update, and retrieve per-user canvases
+- Client-side encryption and decryption via Zama FHE
+- On-chain storage of encrypted drawings
+- Wallet-based ownership and access
+- React + Vite UI with RainbowKit for wallet connection
 
-   # Optional: Set Etherscan API key for contract verification
-   npx hardhat vars set ETHERSCAN_API_KEY
-   ```
+## Architecture Overview
 
-3. **Compile and test**
+- **Smart Contract (Hardhat + Zama FHEVM)**: Stores encrypted canvas data, enforces ownership, and exposes read/write
+  methods.
+- **Zama Relayer SDK**: Handles encryption, ciphertext formatting, and client decryption flows.
+- **Frontend (React + Vite)**: Canvas UI, wallet connection, encryption flow, and rendering of decrypted drawings.
 
-   ```bash
-   npm run compile
-   npm run test
-   ```
+## Data Model
 
-4. **Deploy to local network**
+- Canvas size: 10x10
+- Cell IDs: 1-100 (left-to-right, top-to-bottom)
+- Stored data: encrypted list of selected cell IDs
+- Owner: wallet address that created the canvas
 
-   ```bash
-   # Start a local FHEVM-ready node
-   npx hardhat node
-   # Deploy to local network
-   npx hardhat deploy --network localhost
-   ```
+## Tech Stack
 
-5. **Deploy to Sepolia Testnet**
+**Smart Contracts**
+- Solidity + Hardhat
+- Zama FHEVM (`@fhevm/solidity`, `@fhevm/hardhat-plugin`)
+- Ethers v6
 
-   ```bash
-   # Deploy to Sepolia
-   npx hardhat deploy --network sepolia
-   # Verify contract on Etherscan
-   npx hardhat verify --network sepolia <CONTRACT_ADDRESS>
-   ```
+**Frontend**
+- React + Vite
+- RainbowKit + Wagmi (wallet connection)
+- `ethers` for contract write operations
+- `viem` for contract read operations
+- Zama relayer SDK for encryption/decryption
 
-6. **Test on Sepolia Testnet**
-
-   ```bash
-   # Once deployed, you can run a simple test on Sepolia.
-   npx hardhat test --network sepolia
-   ```
-
-## 📁 Project Structure
+## Repository Layout
 
 ```
-fhevm-hardhat-template/
-├── contracts/           # Smart contract source files
-│   └── FHECounter.sol   # Example FHE counter contract
-├── deploy/              # Deployment scripts
-├── tasks/               # Hardhat custom tasks
-├── test/                # Test files
-├── hardhat.config.ts    # Hardhat configuration
-└── package.json         # Dependencies and scripts
+contracts/          Smart contracts (PrivacyCanvas.sol)
+deploy/             Deployment scripts
+deployments/        Network-specific deployments and ABI
+tasks/              Hardhat tasks
+test/               Contract tests
+ui/                 React frontend (Vite)
+docs/               Internal documentation (Zama guides)
 ```
 
-## 📜 Available Scripts
+## Prerequisites
 
-| Script             | Description              |
-| ------------------ | ------------------------ |
-| `npm run compile`  | Compile all contracts    |
-| `npm run test`     | Run all tests            |
-| `npm run coverage` | Generate coverage report |
-| `npm run lint`     | Run linting checks       |
-| `npm run clean`    | Clean build artifacts    |
+- Node.js >= 20
+- npm >= 7
+- A funded wallet for Sepolia deployments
+- RPC access (e.g., Infura or another provider)
 
-## 📚 Documentation
+## Environment Configuration (Hardhat)
 
-- [FHEVM Documentation](https://docs.zama.ai/fhevm)
-- [FHEVM Hardhat Setup Guide](https://docs.zama.ai/protocol/solidity-guides/getting-started/setup)
-- [FHEVM Testing Guide](https://docs.zama.ai/protocol/solidity-guides/development-guide/hardhat/write_test)
-- [FHEVM Hardhat Plugin](https://docs.zama.ai/protocol/solidity-guides/development-guide/hardhat)
+Create a `.env` file in the project root for contract deployment and verification.
 
-## 📄 License
+```
+PRIVATE_KEY=your_private_key
+INFURA_API_KEY=your_infura_api_key
+ETHERSCAN_API_KEY=your_etherscan_api_key
+```
 
-This project is licensed under the BSD-3-Clause-Clear License. See the [LICENSE](LICENSE) file for details.
+Notes:
+- Use a private key, not a mnemonic.
+- The frontend does not use environment variables.
 
-## 🆘 Support
+## Install & Build (Contracts)
 
-- **GitHub Issues**: [Report bugs or request features](https://github.com/zama-ai/fhevm/issues)
-- **Documentation**: [FHEVM Docs](https://docs.zama.ai)
-- **Community**: [Zama Discord](https://discord.gg/zama)
+```
+npm install
+npm run compile
+npm run test
+```
 
----
+## Deploy (Local)
 
-**Built with ❤️ by the Zama team**
+```
+npm run chain
+npm run deploy:localhost
+```
+
+## Deploy (Sepolia)
+
+```
+npm run deploy:sepolia
+npm run verify:sepolia -- <CONTRACT_ADDRESS>
+```
+
+## Frontend Development
+
+```
+cd ui
+npm install
+npm run dev
+```
+
+## Frontend Build
+
+```
+cd ui
+npm run build
+npm run preview
+```
+
+## Using the App
+
+1. Connect your wallet in the UI.
+2. Create a new canvas.
+3. Click grid cells to draw.
+4. Save: encrypts and stores the drawing on-chain.
+5. Load your canvas and decrypt to display the drawing.
+
+## ABI Requirements
+
+The frontend must use the contract ABI generated by the deployment process. Copy the ABI from
+`deployments/sepolia` into the UI after each deployment to avoid mismatches.
+
+## Testing
+
+```
+npm run test
+npm run test:sepolia
+```
+
+## Security & Privacy Considerations
+
+- On-chain data is encrypted; plaintext never touches the contract.
+- Transaction metadata (sender, gas, timing) is still public.
+- Decryption happens client-side using the Zama relayer flow.
+- Access control is enforced by contract ownership rules.
+
+## Limitations
+
+- Only a single 10x10 canvas is stored per user (current design).
+- Decryption requires client access to the relayer flow.
+- Gas costs are higher than plaintext storage due to FHE.
+
+## Future Roadmap
+
+- Multiple canvases per wallet and version history
+- Encrypted color palette support (beyond binary cells)
+- Collaborative canvases with selective access
+- Improved indexing and search for public metadata
+- L2 deployment options for lower gas costs
+- Enhanced UI tools (brushes, undo/redo, export)
+
+## License
+
+BSD-3-Clause-Clear. See `LICENSE`.
